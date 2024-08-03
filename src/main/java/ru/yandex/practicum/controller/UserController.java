@@ -1,13 +1,14 @@
 package ru.yandex.practicum.controller;
 
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.DTO.UserUpdateDTO;
 import ru.yandex.practicum.exception.ValidationException;
-import ru.yandex.practicum.model.Film;
 import ru.yandex.practicum.model.User;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,71 +26,44 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@RequestBody User user) {
-        if (validate(user)) {
-            user.setId((int)getNextId());
-            users.put(user.getId(), user);
-        }
+    public User create(@Valid @RequestBody User user) {
+        user.setId((int)getNextId());
+        users.put(user.getId(), user);
+
         log.info("В список занесён новый пользователь");
         return user;
     }
 
     @PutMapping
-    public User update(@RequestBody User newUser) {
+    public User update(@Valid @RequestBody UserUpdateDTO newUser) {
         if (newUser.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
-        if (users.containsKey(newUser.getId())) {
-            User existingUser = users.get(newUser.getId());
-            if (newUser.getName() != null) {
-                if (newUser.getLogin() != null) {
-                    if (newUser.getLogin().isBlank() || newUser.getLogin().contains(" ")) {
-                        throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-                    }
-                    existingUser.setName(newUser.getLogin());
-                }
-                if (newUser.getName().isBlank()) {
-                    existingUser.setName(existingUser.getLogin());
-                }
-            }
-            if (newUser.getEmail() != null) {
-                if (newUser.getEmail().isBlank() || !newUser.getEmail().contains("@")) {
-                    throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
-                }
-                existingUser.setEmail(newUser.getEmail());
-            }
-            if (newUser.getLogin() != null) {
-                if (newUser.getLogin().isBlank() || newUser.getLogin().contains(" ")) {
-                    throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-                }
-                existingUser.setLogin(newUser.getLogin());
-            }
-            if (newUser.getBirthday() != null) {
-                if (newUser.getBirthday().isAfter(Instant.now())) {
-                    throw new ValidationException("Продолжительность фильма должна быть положительным числом");
-                }
-                existingUser.setBirthday(newUser.getBirthday());
-            }
-            log.debug("Изменён пользователь в списке");
-            return existingUser;
+        if (!users.containsKey(newUser.getId())) {
+            throw new ValidationException("Пользователь с id " + newUser.getId() + "не найден");
         }
-        throw new ValidationException("Пользователь с id " + newUser.getId() + "не найден");
-    }
 
-    public boolean validate(User user) {
-        if (!user.getEmail().contains("@") || user.getEmail().isBlank()) {
-            throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
+        User existingUser = users.get(newUser.getId());
+        if (newUser.getName() != null) {
+            if (newUser.getLogin() != null) {
+                existingUser.setName(newUser.getLogin());
+            }
+            if (newUser.getName().isBlank()) {
+                existingUser.setName(existingUser.getLogin());
+            }
         }
-        if (user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
+        if (newUser.getEmail() != null) {
+            existingUser.setEmail(newUser.getEmail());
         }
-        if (user.getBirthday().isAfter(Instant.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем");
+        if (newUser.getLogin() != null) {
+            existingUser.setLogin(newUser.getLogin());
         }
-        if (user.getName().isBlank()) {
-            user.setName(user.getLogin());
+        if (newUser.getBirthday() != null) {
+            existingUser.setBirthday(newUser.getBirthday());
         }
-        return true;
+
+        log.debug("Изменён пользователь в списке");
+        return existingUser;
     }
 
     private long getNextId() {

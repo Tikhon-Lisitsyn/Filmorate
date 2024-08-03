@@ -1,86 +1,44 @@
-import org.junit.jupiter.api.BeforeEach;
-import ru.yandex.practicum.controller.FilmController;
-import ru.yandex.practicum.controller.UserController;
-import ru.yandex.practicum.exception.ValidationException;
+import org.junit.jupiter.api.Test;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.ConstraintViolation;
 import ru.yandex.practicum.model.Film;
 
-import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.model.User;
-
-import java.time.Instant;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDate;
+import java.util.Set;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FilmTest {
-    Film film;
-    FilmController filmController;
 
-    @BeforeEach
-    void setup() {
-        film = new Film();
-        filmController = new FilmController();
+    private final Validator validator;
+
+    public FilmTest() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
     }
 
     @Test
-    void film1AndFilm2Equals() {
-        Film film1 = new Film();
-        film1.setId(1);
-        film1.setDescription("test_description");
-        film1.setReleaseDate(Instant.now());
-        film1.setName("test name");
-        film1.setDuration(3);
-
-        Film film2 = new Film();
-        film2.setId(1);
-        film2.setDescription("test_description");
-        film2.setReleaseDate(Instant.now());
-        film2.setName("test name");
-        film2.setDuration(3);
-
-        assertEquals(film1,film2,"Два фильма не равны!");
-    }
-
-    @Test
-    void filmNameFailValidation() throws ValidationException {
+    public void testFilmValidation() {
+        Film film = new Film();
         film.setName("");
-
-        assertThrows(ValidationException.class, () -> {
-           filmController.validate(film);
-        });
-    }
-
-    @Test
-    void filmDescriptionFailValidation() throws ValidationException {
-        film.setName("test_name");
-        film.setDescription("description of more than 200 characters description of more than 200 characters " +
-                "description of more than 200 characters description of more than 200 characters" +
-                " description of more than 200 characters...");
-
-        assertThrows(ValidationException.class, () -> {
-            filmController.validate(film);
-        });
-    }
-
-    @Test
-    void filmReleaseDateFailValidation() throws ValidationException {
-        film.setName("test_name");
-        film.setDescription("test_description");
-        film.setReleaseDate(Instant.ofEpochMilli(-2335564801L));
-
-        assertThrows(ValidationException.class, () -> {
-            filmController.validate(film);
-        });
-    }
-
-    @Test
-    void filmDurationFailValidation() throws ValidationException {
-        film.setName("test_name");
-        film.setDescription("test_description");
-        film.setReleaseDate(Instant.ofEpochMilli(0));
+        film.setDescription("A".repeat(201));
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
         film.setDuration(-1);
 
-        assertThrows(ValidationException.class, () -> {
-            filmController.validate(film);
-        });
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertEquals(3, violations.size());
+    }
+
+    @Test
+    public void testValidFilm() {
+        Film film = new Film();
+        film.setName("Valid Film");
+        film.setDescription("A valid description");
+        film.setReleaseDate(LocalDate.of(1895, 12, 28));
+        film.setDuration(120);
+
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        assertEquals(0, violations.size());
     }
 }
