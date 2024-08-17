@@ -1,12 +1,15 @@
 package ru.yandex.practicum.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.DTO.UserUpdateDTO;
 import ru.yandex.practicum.exception.ValidationException;
 import ru.yandex.practicum.model.User;
+import ru.yandex.practicum.service.UserService;
+import ru.yandex.practicum.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -14,64 +17,47 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-    private final static Logger log = LoggerFactory.getLogger(UserController.class);
-    Map<Integer, User> users = new HashMap<>();
+    private final InMemoryUserStorage inMemoryUserStorage;
+    private final UserService userService;
 
     @GetMapping
     public Collection<User> findAll() {
-        log.info("Запрошен список пользователей");
-        return users.values();
+        return inMemoryUserStorage.findAll();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        user.setId((int)getNextId());
-        users.put(user.getId(), user);
-
-        log.info("В список занесён новый пользователь");
-        return user;
+        return inMemoryUserStorage.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody UserUpdateDTO newUser) {
-        if (newUser.getId() == null) {
-            throw new ValidationException("Id должен быть указан");
-        }
-        if (!users.containsKey(newUser.getId())) {
-            throw new ValidationException("Пользователь с id " + newUser.getId() + "не найден");
-        }
-
-        User existingUser = users.get(newUser.getId());
-        if (newUser.getName() != null) {
-            if (newUser.getLogin() != null) {
-                existingUser.setName(newUser.getLogin());
-            }
-            if (newUser.getName().isBlank()) {
-                existingUser.setName(existingUser.getLogin());
-            }
-        }
-        if (newUser.getEmail() != null) {
-            existingUser.setEmail(newUser.getEmail());
-        }
-        if (newUser.getLogin() != null) {
-            existingUser.setLogin(newUser.getLogin());
-        }
-        if (newUser.getBirthday() != null) {
-            existingUser.setBirthday(newUser.getBirthday());
-        }
-
-        log.debug("Изменён пользователь в списке");
-        return existingUser;
+        return inMemoryUserStorage.update(newUser);
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@PathVariable(value = "id", required = false) Integer userId,
+                          @PathVariable(required = false) Integer friendId) {
+        return userService.addFriend(userId,friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User deleteFriend(@PathVariable(value = "id", required = false) Integer userId,
+                             @PathVariable(required = false) Integer friendId) {
+        return userService.deleteFriend(userId,friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getFriends(@PathVariable(value = "id", required = false) Integer userId) {
+        return userService.getFriends(userId);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getMutualFriends(@PathVariable(value = "id", required = false) Integer userId,
+                                             @PathVariable(value = "otherId", required = false ) Integer friendId) {
+        return userService.getMutualFriends(userId, friendId);
     }
 }
