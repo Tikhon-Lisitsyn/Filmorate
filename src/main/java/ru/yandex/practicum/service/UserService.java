@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.DTO.UserUpdateDTO;
 import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.exception.ValidationException;
 import ru.yandex.practicum.model.User;
@@ -18,6 +19,18 @@ import java.util.List;
 public class UserService {
     private final InMemoryUserStorage inMemoryUserStorage;
     private final static Logger log = LoggerFactory.getLogger(UserService.class);
+
+    public Collection<User> findAll() {
+        return inMemoryUserStorage.findAll();
+    }
+
+    public User create(User user) {
+        return inMemoryUserStorage.create(user);
+    }
+
+    public User update(UserUpdateDTO newUser) {
+        return inMemoryUserStorage.update(newUser);
+    }
 
     public User addFriend(Integer addingUserId, Integer addableUserId) {
         validate(addingUserId,addableUserId);

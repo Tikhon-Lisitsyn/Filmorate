@@ -20,22 +20,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-    private final InMemoryUserStorage inMemoryUserStorage;
     private final UserService userService;
 
     @GetMapping
     public Collection<User> findAll() {
-        return inMemoryUserStorage.findAll();
+        return userService.findAll();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        return inMemoryUserStorage.create(user);
+        return userService.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody UserUpdateDTO newUser) {
-        return inMemoryUserStorage.update(newUser);
+        return userService.update(newUser);
     }
 
     @PutMapping("/{id}/friends/{friendId}")

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.DTO.FilmUpdateDTO;
 import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.exception.ValidationException;
 import ru.yandex.practicum.model.Film;
@@ -19,6 +20,18 @@ public class FilmService {
     private final InMemoryFilmStorage inMemoryFilmStorage;
     private final InMemoryUserStorage inMemoryUserStorage;
     private final static Logger log = LoggerFactory.getLogger(FilmService.class);
+
+    public Collection<Film> findAll() {
+        return inMemoryFilmStorage.findAll();
+    }
+
+    public Film create(Film film) {
+        return inMemoryFilmStorage.create(film);
+    }
+
+    public Film update(FilmUpdateDTO newFilm) {
+        return inMemoryFilmStorage.update(newFilm);
+    }
 
     public Film addLike(Integer userId, Integer filmId) {
         validate(userId, filmId);

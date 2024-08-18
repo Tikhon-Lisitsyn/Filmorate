@@ -23,27 +23,26 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/films")
 public class FilmController {
-    private final InMemoryFilmStorage inMemoryFilmStorage;
     private final FilmService filmService;
 
     @GetMapping
     public Collection<Film> findAll() {
-        return inMemoryFilmStorage.findAll();
+        return filmService.findAll();
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        return inMemoryFilmStorage.create(film);
+        return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody FilmUpdateDTO newFilm) {
-        return inMemoryFilmStorage.update(newFilm);
+        return filmService.update(newFilm);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@PathVariable(required = false) Integer userId,
-                        @PathVariable(value = "id", required = false) Integer filmId) {
+    public Film addLike(@PathVariable Integer userId,
+                        @PathVariable("id") Integer filmId) {
         return filmService.addLike(userId, filmId);
     }
 
@@ -53,7 +52,7 @@ public class FilmController {
         return filmService.deleteLike(userId, filmId);
     }
 
-    @GetMapping("/popular?count={count}")
+    @GetMapping("/popular")
     public Collection<Film> getTopFilms(@RequestParam(required = false) Integer count) {
         return filmService.getTopFilmsWithCount(count);
     }
