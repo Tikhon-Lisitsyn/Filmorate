@@ -3,7 +3,8 @@ package ru.yandex.practicum.model;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
+
 
 @Data
 public class Film {
@@ -24,4 +25,7 @@ public class Film {
     @NotNull(message = "Продолжительность должна быть указана")
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private Integer duration;
+
+    private List<String> genres;
+    private String rating;
 }

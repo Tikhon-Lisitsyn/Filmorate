@@ -29,4 +29,5 @@ public class User {
 
     private Set<Integer> friends;
     private Set<Integer> likes;
+    private FriendStatus friendStatus;
 }
