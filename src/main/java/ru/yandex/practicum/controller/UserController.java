@@ -1,62 +1,59 @@
 package ru.yandex.practicum.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.DTO.UserUpdateDTO;
-import ru.yandex.practicum.exception.ValidationException;
+import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.model.User;
-import ru.yandex.practicum.service.UserService;
-import ru.yandex.practicum.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.storage.UserStorage;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
+
+    private final UserStorage userStorage;
 
     @GetMapping
-    public Collection<User> findAll() {
-        return userService.findAll();
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userStorage.findAll();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Integer id) {
+        return userStorage.findUserById(id)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new NotFoundException("User with ID " + id + " not found"));
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody User user) {
-        return userService.create(user);
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        User createdUser = userStorage.create(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
-    @PutMapping
-    public User update(@Valid @RequestBody UserUpdateDTO newUser) {
-        return userService.update(newUser);
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Integer id, @RequestBody UserUpdateDTO userUpdateDTO) {
+        User existingUser = userStorage.findUserById(id)
+                .orElseThrow(() -> new NotFoundException("User with ID " + id + " not found"));
+
+        existingUser.setName(userUpdateDTO.getName() != null ? userUpdateDTO.getName() : existingUser.getName());
+        existingUser.setEmail(userUpdateDTO.getEmail() != null ? userUpdateDTO.getEmail() : existingUser.getEmail());
+        existingUser.setLogin(userUpdateDTO.getLogin() != null ? userUpdateDTO.getLogin() : existingUser.getLogin());
+        existingUser.setBirthday(userUpdateDTO.getBirthday() != null ? userUpdateDTO.getBirthday() : existingUser.getBirthday());
+
+        User updatedUser = userStorage.update(existingUser);
+        return ResponseEntity.ok(updatedUser);
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public User addFriend(@PathVariable(value = "id", required = false) Integer userId,
-                          @PathVariable(required = false) Integer friendId) {
-        return userService.addFriend(userId,friendId);
-    }
-
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public User deleteFriend(@PathVariable(value = "id", required = false) Integer userId,
-                             @PathVariable(required = false) Integer friendId) {
-        return userService.deleteFriend(userId,friendId);
-    }
-
-    @GetMapping("/{id}/friends")
-    public Collection<User> getFriends(@PathVariable(value = "id", required = false) Integer userId) {
-        return userService.getFriends(userId);
-    }
-
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> getMutualFriends(@PathVariable(value = "id", required = false) Integer userId,
-                                             @PathVariable(value = "otherId", required = false ) Integer friendId) {
-        return userService.getMutualFriends(userId, friendId);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
+        userStorage.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

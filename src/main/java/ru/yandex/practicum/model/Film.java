@@ -28,4 +28,5 @@ public class Film {
 
     private List<String> genres;
     private String rating;
+    private Integer ratingId;
 }

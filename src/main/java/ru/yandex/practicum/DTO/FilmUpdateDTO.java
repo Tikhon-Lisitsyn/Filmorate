@@ -20,4 +20,6 @@ public class FilmUpdateDTO {
 
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private Integer duration;
+
+    private Integer ratingId;
 }
