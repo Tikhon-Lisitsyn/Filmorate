@@ -1,15 +1,18 @@
-package ru.yandex.practicum.storage.user;
+package ru.yandex.practicum.storage;
 
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestBody;
-import ru.yandex.practicum.DTO.UserUpdateDTO;
 import ru.yandex.practicum.model.User;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 public interface UserStorage {
-    public Collection<User> findAll();
-    public User create(User user);
-    public User update(UserUpdateDTO newUser);
-    public long getNextId();
+    List<User> findAll();
+
+    User create(User user);
+
+    User update(User user);
+
+    Optional<User> findUserById(Integer id);
+
+    void delete(Integer id);
 }

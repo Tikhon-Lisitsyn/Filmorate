@@ -1,15 +1,18 @@
-package ru.yandex.practicum.storage.film;
+package ru.yandex.practicum.storage;
 
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestBody;
-import ru.yandex.practicum.DTO.FilmUpdateDTO;
 import ru.yandex.practicum.model.Film;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 public interface FilmStorage {
-    public Collection<Film> findAll();
-    public Film create(Film film);
-    public Film update(FilmUpdateDTO newFilm);
-    public long getNextId();
+    List<Film> findAll();
+
+    Film create(Film film);
+
+    Film update(Film film);
+
+    Optional<Film> findFilmById(Integer id);
+
+    void delete(Integer id);
 }

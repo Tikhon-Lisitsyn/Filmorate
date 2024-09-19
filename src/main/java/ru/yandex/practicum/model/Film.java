@@ -26,6 +26,7 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private Integer duration;
 
-    private List<String> genres;
+    private List<Integer> genres;
     private String rating;
+    private Integer ratingId;
 }

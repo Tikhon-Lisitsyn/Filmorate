@@ -1,62 +1,86 @@
 package ru.yandex.practicum.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.DTO.UserUpdateDTO;
-import ru.yandex.practicum.exception.ValidationException;
+import ru.yandex.practicum.DTO.user.UserRequestDTO;
+import ru.yandex.practicum.DTO.user.UserResponseDTO;
+import ru.yandex.practicum.DTO.user.UserUpdateDTO;
+import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.model.User;
 import ru.yandex.practicum.service.UserService;
-import ru.yandex.practicum.storage.user.InMemoryUserStorage;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
     @GetMapping
-    public Collection<User> findAll() {
-        return userService.findAll();
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        List<UserResponseDTO> users = userService.getAllUsers().stream()
+                .map(this::toUserResponseDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable @NotNull @Positive int id) {
+        User user = userService.getUserById(id).orElse(null);
+        return ResponseEntity.ok(toUserResponseDto(user));
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody User user) {
-        return userService.create(user);
+    public ResponseEntity<UserResponseDTO> createUser(@RequestBody @Valid UserRequestDTO userRequestDto) {
+        User user = userService.createUser(toUser(userRequestDto));
+        return ResponseEntity.ok(toUserResponseDto(user));
     }
 
-    @PutMapping
-    public User update(@Valid @RequestBody UserUpdateDTO newUser) {
-        return userService.update(newUser);
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable @NotNull @Positive Integer id,
+                                           @RequestBody @Valid UserUpdateDTO userUpdateDTO) {
+        User existingUser = userService.getUserById(id)
+                .orElseThrow(() -> new NotFoundException("User with ID " + id + " not found"));
+
+        existingUser.setName(userUpdateDTO.getName() != null ? userUpdateDTO.getName() : existingUser.getName());
+        existingUser.setEmail(userUpdateDTO.getEmail() != null ? userUpdateDTO.getEmail() : existingUser.getEmail());
+        existingUser.setLogin(userUpdateDTO.getLogin() != null ? userUpdateDTO.getLogin() : existingUser.getLogin());
+        existingUser.setBirthday(userUpdateDTO.getBirthday() != null ? userUpdateDTO.getBirthday() : existingUser.getBirthday());
+
+        User updatedUser = userService.updateUser(existingUser);
+        return ResponseEntity.ok(updatedUser);
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public User addFriend(@PathVariable(value = "id", required = false) Integer userId,
-                          @PathVariable(required = false) Integer friendId) {
-        return userService.addFriend(userId,friendId);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable @NotNull @Positive Integer id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public User deleteFriend(@PathVariable(value = "id", required = false) Integer userId,
-                             @PathVariable(required = false) Integer friendId) {
-        return userService.deleteFriend(userId,friendId);
+    private UserResponseDTO toUserResponseDto(User user) {
+        UserResponseDTO ur = new UserResponseDTO();
+        ur.setId(user.getId());
+        ur.setEmail(user.getEmail());
+        ur.setLogin(user.getLogin());
+        ur.setName(user.getName());
+        ur.setBirthday(user.getBirthday());
+        return ur;
     }
 
-    @GetMapping("/{id}/friends")
-    public Collection<User> getFriends(@PathVariable(value = "id", required = false) Integer userId) {
-        return userService.getFriends(userId);
-    }
-
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> getMutualFriends(@PathVariable(value = "id", required = false) Integer userId,
-                                             @PathVariable(value = "otherId", required = false ) Integer friendId) {
-        return userService.getMutualFriends(userId, friendId);
+    private User toUser(UserRequestDTO userRequestDto) {
+        User user = new User();
+        user.setEmail(userRequestDto.getEmail());
+        user.setLogin(userRequestDto.getLogin());
+        user.setName(userRequestDto.getName());
+        user.setBirthday(userRequestDto.getBirthday());
+        return user;
     }
 }
