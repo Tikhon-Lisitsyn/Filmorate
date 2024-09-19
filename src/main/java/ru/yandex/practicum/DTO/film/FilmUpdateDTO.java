@@ -1,4 +1,4 @@
-package ru.yandex.practicum.DTO;
+package ru.yandex.practicum.DTO.film;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;

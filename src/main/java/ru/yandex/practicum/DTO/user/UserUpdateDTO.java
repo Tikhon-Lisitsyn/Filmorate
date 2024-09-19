@@ -1,4 +1,4 @@
-package ru.yandex.practicum.DTO;
+package ru.yandex.practicum.DTO.user;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;

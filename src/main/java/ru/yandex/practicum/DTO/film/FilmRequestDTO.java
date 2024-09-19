@@ -1,32 +1,29 @@
-package ru.yandex.practicum.model;
+package ru.yandex.practicum.DTO.film;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-import jakarta.validation.constraints.*;
+
 import java.time.LocalDate;
 import java.util.List;
 
-
 @Data
-public class Film {
-    private Integer id;
+public class FilmRequestDTO {
 
-    @NotNull(message = "Название должно быть указано")
     @NotBlank(message = "Название не может быть пустым")
     private String name;
 
-    @NotNull(message = "Описание должно быть указано")
     @Size(max = 200, message = "Максимальная длина описания - 200 символов")
     private String description;
 
-    @NotNull(message = "Дата релиза должна быть указана")
     @PastOrPresent(message = "Дата релиза не может быть раньше, чем 28 декабря 1895 года")
     private LocalDate releaseDate;
 
-    @NotNull(message = "Продолжительность должна быть указана")
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private Integer duration;
 
     private List<Integer> genres;
-    private String rating;
-    private Integer ratingId;
+    private int mpaId;
 }
